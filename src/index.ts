@@ -3,7 +3,7 @@
 // ====================================
 
 import express from 'express';
-import { Logging } from 'microservices-tools';
+import { Logging } from './utils/logging';
 
 // ====================================
 // 📦 IMPORT SETUP MODULES

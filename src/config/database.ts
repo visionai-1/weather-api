@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { Logging } from 'microservices-tools';
+import { Logging } from '../utils/logging';
 import { ENV } from './constants';
 
 /**
