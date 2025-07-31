@@ -1,0 +1,175 @@
+import axios, { AxiosInstance } from 'axios';
+import { TomorrowRealtimeResponse, TomorrowForecastResponse, TomorrowLocationSearchResponse } from '../../interfaces/weather';
+import { ENV } from '../../config/constants';
+import HttpError from '../../utils/httpError';
+
+/**
+ * 🌐 Tomorrow.io API Client
+ * Functional approach for Tomorrow.io weather API integration
+ */
+
+/**
+ * Create and configure axios client for Tomorrow.io API
+ */
+const createApiClient = (): AxiosInstance => {
+    const apiKey = ENV.TOMORROW_API_KEY || '';
+    
+    if (!apiKey) {
+        throw HttpError.internalServerError('Tomorrow.io API key not configured');
+    }
+
+    const client = axios.create({
+        baseURL: ENV.TOMORROW_API_BASE_URL,
+        timeout: 15000,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    });
+
+    // Add API key to all requests
+    client.interceptors.request.use((config) => {
+        config.params = { ...config.params, apikey: apiKey };
+        return config;
+    });
+
+    // Handle API errors consistently
+    client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            const status = error.response?.status;
+            
+            switch (status) {
+                case 401:
+                    throw HttpError.unauthorized('Invalid Tomorrow.io API key');
+                case 403:
+                    throw HttpError.forbidden('Tomorrow.io API access forbidden');
+                case 429:
+                    throw HttpError.tooManyRequests('Tomorrow.io API rate limit exceeded');
+                case 404:
+                    throw HttpError.notFound('Location not found');
+                default:
+                    if (status >= 500) {
+                        throw HttpError.internalServerError('Tomorrow.io API server error');
+                    }
+                    throw HttpError.internalServerError('Failed to fetch weather data');
+            }
+        }
+    );
+
+    return client;
+};
+
+// Create the shared API client instance
+const apiClient = createApiClient();
+
+/**
+ * Fetch real-time weather data for coordinates
+ */
+export const getRealTimeWeather = async (
+    lat: number, 
+    lon: number, 
+    units: 'metric' | 'imperial' = 'metric'
+): Promise<TomorrowRealtimeResponse> => {
+    const response = await apiClient.get('/weather/realtime', {
+        params: {
+            location: `${lat},${lon}`,
+            units,
+        },
+    });
+    return response.data;
+};
+
+/**
+ * Fetch real-time weather data for city name
+ */
+export const getRealTimeWeatherByCity = async (
+    city: string,
+    units: 'metric' | 'imperial' = 'metric'
+): Promise<TomorrowRealtimeResponse> => {
+    const response = await apiClient.get('/weather/realtime', {
+        params: {
+            location: city,
+            units,
+        },
+    });
+    return response.data;
+};
+
+/**
+ * Fetch weather forecast for coordinates
+ */
+export const getWeatherForecast = async (
+    lat: number, 
+    lon: number, 
+    timesteps: '1h' | '1d' = '1h',
+    units: 'metric' | 'imperial' = 'metric'
+): Promise<TomorrowForecastResponse> => {
+    const response = await apiClient.get('/weather/forecast', {
+        params: {
+            location: `${lat},${lon}`,
+            timesteps,
+            units,
+        },
+    });
+    return response.data;
+};
+
+/**
+ * Fetch weather forecast for city name
+ */
+export const getWeatherForecastByCity = async (
+    city: string,
+    timesteps: '1h' | '1d' = '1h',
+    units: 'metric' | 'imperial' = 'metric'
+): Promise<TomorrowForecastResponse> => {
+    const response = await apiClient.get('/weather/forecast', {
+        params: {
+            location: city,
+            timesteps,
+            units,
+        },
+    });
+    return response.data;
+};
+
+/**
+ * Search for locations by name
+ */
+export const searchLocation = async (
+    query: string, 
+    limit: number = 5
+): Promise<TomorrowLocationSearchResponse> => {
+    const response = await apiClient.get('/map/search', {
+        params: {
+            query: query.trim(),
+            limit: Math.min(limit, 10), // Cap at 10 results
+        },
+    });
+    return response.data;
+};
+
+/**
+ * Check API health status
+ */
+export const checkApiHealth = async (): Promise<{ status: 'healthy' | 'unhealthy' }> => {
+    try {
+        await apiClient.get('/weather/realtime', {
+            params: {
+                location: '0,0',
+                units: 'metric',
+            },
+        });
+        return { status: 'healthy' };
+    } catch {
+        return { status: 'unhealthy' };
+    }
+};
+
+// Export all functions as a module object for backward compatibility
+export const weatherApiClient = {
+    getRealTimeWeather,
+    getWeatherForecast,
+    searchLocation,
+    checkHealth: checkApiHealth
+}; 

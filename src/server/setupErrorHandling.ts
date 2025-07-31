@@ -3,7 +3,7 @@
 // ====================================
 
 import { Application, Request, Response, NextFunction } from 'express';
-import { Logging } from 'microservices-tools';
+import { Logging } from '../utils/logging';
 import HttpError from '../utils/httpError';
 import { ENV } from '../config/constants';
 

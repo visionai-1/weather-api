@@ -4,9 +4,9 @@
 
 import { Application } from 'express';
 import mongoose from 'mongoose';
-import { Logging } from 'microservices-tools';
+import { Logging } from '../utils/logging';
 import { ENV } from '../config/constants';
-import { router as routes } from '../routes/v1/index';
+import { router as routes } from '../routes/v1/index.route';
 
 
 export const setupApiRoutes = (app: Application): void => {

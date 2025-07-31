@@ -4,7 +4,7 @@
 
 import http from 'http';
 import { Application } from 'express';
-import { Logging } from 'microservices-tools';
+import { Logging } from '../utils/logging';
 import { ENV } from '../config/constants';
 
 // ====================================

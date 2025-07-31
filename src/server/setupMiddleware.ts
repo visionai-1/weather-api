@@ -5,7 +5,7 @@
 import express, { Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import { Logging } from 'microservices-tools';
+import { Logging } from '../utils/logging';
 import { ENV } from '../config/constants';
 
 // ====================================

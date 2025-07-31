@@ -40,7 +40,6 @@
     "joi": "^17.6.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
-    "microservices-tools": "github:visionai-1/microservices-tools",
     "moment": "^2.29.3",
     "mongodb": "^6.16.0",
     "mongoose": "^6.13.8",

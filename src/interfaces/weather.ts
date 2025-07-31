@@ -1,24 +1,24 @@
 /**
  * 🌤️ Weather Data Interfaces
- * Tomorrow.io API integration and weather data models
+ * Simplified interfaces for Tomorrow.io API integration
  */
 
 // Location interfaces
 export interface Location {
-    lat: number;
-    lng: number;
+    lat?: number;
+    lon?: number;
     name?: string;
     country?: string;
 }
 
 export interface LocationQuery {
     lat?: number;
-    lng?: number;
+    lon?: number;
     city?: string;
 }
 
 // Tomorrow.io API response interfaces
-export interface TomorrowAPIResponse {
+export interface TomorrowRealtimeResponse {
     data: {
         time: string;
         values: {
@@ -38,16 +38,52 @@ export interface TomorrowAPIResponse {
     location: {
         lat: number;
         lon: number;
-        name?: string;
-        type?: string;
     };
 }
 
-// Our simplified weather data
+export interface TomorrowForecastResponse {
+    timelines: {
+        timestep: string;
+        intervals: Array<{
+            startTime: string;
+            values: {
+                temperature: number;
+                humidity: number;
+                windSpeed: number;
+                windDirection: number;
+                precipitationIntensity?: number;
+                precipitationProbability?: number;
+                visibility: number;
+                uvIndex: number;
+                cloudCover: number;
+                pressureSurfaceLevel: number;
+                weatherCode: number;
+            };
+        }>;
+    }[];
+    location: {
+        lat: number;
+        lon: number;
+    };
+}
+
+export interface TomorrowLocationSearchResponse {
+    features: Array<{
+        geometry: {
+            coordinates: [number, number]; // [lon, lat]
+        };
+        properties: {
+            name?: string;
+            full_name?: string;
+            country?: string;
+        };
+    }>;
+}
+
+// Our weather data models
 export interface WeatherData {
-    id?: string;
     location: Location;
-    timestamp: Date;
+    timestamp?: Date | string;
     temperature: number;
     humidity: number;
     windSpeed: number;
@@ -61,28 +97,50 @@ export interface WeatherData {
     cloudCover: number;
     pressure: number;
     weatherCode: number;
-    description?: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    description: string;
 }
 
-// API request/response interfaces
-export interface WeatherRequest {
-    location: LocationQuery;
-    fields?: string[];
-    units?: 'metric' | 'imperial';
+export interface ForecastData {
+    location: Location;
+    timestep: string;
+    intervals: Array<{
+        time: Date | string;
+        temperature: number;
+        humidity: number;
+        windSpeed: number;
+        windDirection: number;
+        precipitation: {
+            intensity: number;
+            probability: number;
+        };
+        visibility: number;
+        uvIndex: number;
+        cloudCover: number;
+        pressure: number;
+        weatherCode: number;
+        description: string;
+    }>;
 }
 
+// Compact weather response format
+export interface CompactWeatherData {
+    location: string;
+    temperature: number;
+    condition: string;
+    humidity: number;
+    windSpeed: number;
+    timestamp?: Date | string;
+}
+
+// API response interfaces
 export interface WeatherResponse {
     success: boolean;
-    data?: WeatherData;
+    data?: WeatherData | ForecastData | WeatherData[] | CompactWeatherData;
     message?: string;
 }
 
-export interface WeatherListResponse {
-    success: boolean;
-    data?: WeatherData[];
-    total?: number;
-    page?: number;
-    limit?: number;
+export interface WeatherRequest {
+    location: LocationQuery;
+    units?: 'metric' | 'imperial';
+    format?: 'full' | 'compact';
 } 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import weatherRoutes from './weather';
+import weatherRoutes from './weather.route';
 
 /**
  * 🛣️ API v1 Routes
