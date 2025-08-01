@@ -14,8 +14,7 @@ import {
     getBatchWeatherBodySchema,
 } from '../../schemas';
 import HttpError from '../../utils/httpError';
-import { requireAuth } from '../../middlewares/auth';
-
+import { Logging } from '../../utils/logging';
 /**
  * 🌤️ Weather Routes
  * Enhanced CRUD operations using distributed weather services
@@ -32,6 +31,7 @@ router.get('/realtime',
     validateJoi({ query: getRealtimeWeatherQuerySchema }),
     async (req: Request, res: Response) => {
         try {
+            Logging.info('Realtime weather request received');
             const { lat, lon, city, format = 'full', units = 'metric' } = req.query;
 
             const locationQuery: LocationQuery = {
@@ -52,6 +52,8 @@ router.get('/realtime',
                 message: 'Real-time weather data retrieved successfully'
             };
 
+            Logging.info('Realtime weather data retrieved successfully');
+
             res.json(response);
         } catch (error) {
             if (error instanceof HttpError) {
@@ -71,6 +73,7 @@ router.post('/realtime',
     validateJoi({ body: getRealtimeWeatherBodySchema }),
     async (req: Request, res: Response) => {
         try {
+            Logging.info('Realtime weather request received');
             const { location, format = 'full', units = 'metric' }: WeatherRequest = req.body;
 
             const weatherData = await getWeatherWithFormat(
@@ -84,6 +87,8 @@ router.post('/realtime',
                 data: weatherData as any,
                 message: 'Real-time weather data retrieved successfully'
             };
+
+            Logging.info('Realtime weather data retrieved successfully');
 
             res.json(response);
         } catch (error) {
@@ -105,6 +110,7 @@ router.get('/forecast',
     validateJoi({ query: getWeatherForecastQuerySchema }),
     async (req: Request, res: Response) => {
         try {
+            Logging.info('Weather forecast request received');
             const { lat, lon, city, timesteps = '1h', units = 'metric' } = req.query;
 
             const locationQuery = {
@@ -118,6 +124,8 @@ router.get('/forecast',
                 timesteps as '1h' | '1d',
                 units as 'metric' | 'imperial'
             );
+
+            Logging.info('Weather forecast data retrieved successfully');
 
             res.json({
                 success: true,
@@ -143,9 +151,12 @@ router.post('/batch',
     validateJoi({ body: getBatchWeatherBodySchema }),
     async (req: Request, res: Response) => {
         try {
+            Logging.info('Batch weather request received');
             const { locations, units = 'metric' } = req.body;
 
             const weatherDataList = await getBatchWeather(locations, units);
+
+            Logging.info('Batch weather data retrieved successfully');
 
             res.json({
                 success: true,
