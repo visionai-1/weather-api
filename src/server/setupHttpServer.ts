@@ -64,12 +64,13 @@ export const startHttpServer = (app: Application): void => {
 
     const server = http.createServer(app);
 
-    server.listen(ENV.PORT, () => {
+    const port = typeof ENV.PORT === 'string' ? parseInt(ENV.PORT, 10) : ENV.PORT;
+    server.listen(port, () => {
         // Display startup banner
-        Logging.banner('Tomorrow.io Weather Service', '1.0.0', ENV.PORT);
+        Logging.banner('Tomorrow.io Weather Service', '1.0.0', port);
         
-        Logging.startup(`Server is running on port ${ENV.PORT}`, {
-            port: ENV.PORT,
+        Logging.startup(`Server is running on port ${port}`, {
+            port: port,
             environment: ENV.NODE_ENV,
             nodeVersion: process.version,
             processId: process.pid,
