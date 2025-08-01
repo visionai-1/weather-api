@@ -29,7 +29,7 @@ const router = Router();
  * @access Public
  */
 router.get('/realtime',
-    [validateJoi({ query: getRealtimeWeatherQuerySchema }), requireAuth],
+    validateJoi({ query: getRealtimeWeatherQuerySchema }),
     async (req: Request, res: Response) => {
         try {
             const { lat, lon, city, format = 'full', units = 'metric' } = req.query;
