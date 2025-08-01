@@ -78,48 +78,6 @@ export const validateJoi = (schemas: ValidationSchemas) => {
 };
 
 /**
- * Alternative Joi validation middleware that returns detailed errors
- */
-export const validateJoiDetailed = (schemas: ValidationSchemas) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        const allErrors: any[] = [];
-
-        // Validate and collect all errors
-        ['query', 'body', 'params'].forEach(source => {
-            const schema = schemas[source as keyof ValidationSchemas];
-            const data = req[source as keyof Request];
-            
-            if (schema) {
-                const { error } = schema.validate(data, { 
-                    abortEarly: false,
-                    allowUnknown: false
-                });
-                
-                if (error) {
-                    const sourceErrors = error.details.map(detail => ({
-                        source,
-                        field: detail.path.join('.'),
-                        message: detail.message,
-                        value: detail.context?.value
-                    }));
-                    allErrors.push(...sourceErrors);
-                }
-            }
-        });
-
-        if (allErrors.length > 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Validation failed',
-                errors: allErrors
-            });
-        }
-
-        next();
-    };
-};
-
-/**
  * Simple query validation helper
  */
 export const validateQuery = (schema: Joi.ObjectSchema) => 
@@ -136,12 +94,3 @@ export const validateBody = (schema: Joi.ObjectSchema) =>
  */
 export const validateParams = (schema: Joi.ObjectSchema) => 
     validateJoi({ params: schema });
-
-/**
- * Backward compatibility - basic validation middleware
- */
-export const validateRequest = validateJoi;
-
-// Legacy exports for compatibility
-export const handleValidationErrors = validateJoi;
-export const handleDetailedValidationErrors = validateJoiDetailed;

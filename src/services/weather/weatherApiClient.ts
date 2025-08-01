@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { TomorrowRealtimeResponse, TomorrowForecastResponse, TomorrowLocationSearchResponse } from '../../interfaces/weather';
+import { TomorrowRealtimeResponse, TomorrowForecastResponse } from '../../interfaces/weather';
 import { ENV } from '../../config/constants';
 import HttpError from '../../utils/httpError';
 
@@ -66,7 +66,7 @@ const apiClient = createApiClient();
 /**
  * Fetch real-time weather data for coordinates
  */
-export const getRealTimeWeather = async (
+export const getRealTimeWeatherByCoordinates = async (
     lat: number, 
     lon: number, 
     units: 'metric' | 'imperial' = 'metric'
@@ -99,7 +99,7 @@ export const getRealTimeWeatherByCity = async (
 /**
  * Fetch weather forecast for coordinates
  */
-export const getWeatherForecast = async (
+export const getWeatherForecastByCoordinates = async (
     lat: number, 
     lon: number, 
     timesteps: '1h' | '1d' = '1h',
@@ -134,22 +134,6 @@ export const getWeatherForecastByCity = async (
 };
 
 /**
- * Search for locations by name
- */
-export const searchLocation = async (
-    query: string, 
-    limit: number = 5
-): Promise<TomorrowLocationSearchResponse> => {
-    const response = await apiClient.get('/map/search', {
-        params: {
-            query: query.trim(),
-            limit: Math.min(limit, 10), // Cap at 10 results
-        },
-    });
-    return response.data;
-};
-
-/**
  * Check API health status
  */
 export const checkApiHealth = async (): Promise<{ status: 'healthy' | 'unhealthy' }> => {
@@ -165,11 +149,3 @@ export const checkApiHealth = async (): Promise<{ status: 'healthy' | 'unhealthy
         return { status: 'unhealthy' };
     }
 };
-
-// Export all functions as a module object for backward compatibility
-export const weatherApiClient = {
-    getRealTimeWeather,
-    getWeatherForecast,
-    searchLocation,
-    checkHealth: checkApiHealth
-}; 

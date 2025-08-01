@@ -1,11 +1,10 @@
-import { WeatherData, ForecastData, LocationQuery, Location, CompactWeatherData } from '../../interfaces/weather';
+import { WeatherData, ForecastData, LocationQuery, Location, CompactWeatherData, TimestepKey } from '../../interfaces/weather';
 import { 
-    getRealTimeWeather, 
+    getRealTimeWeatherByCoordinates, 
     getRealTimeWeatherByCity, 
-    getWeatherForecast, 
     getWeatherForecastByCity, 
-    searchLocation, 
-    checkApiHealth 
+    checkApiHealth, 
+    getWeatherForecastByCoordinates
 } from './weatherApiClient';
 import { validateLocationQuery, validateCoordinates, getWeatherDescription, sanitizeWeatherData } from '../../utils/weather';
 import HttpError from '../../utils/httpError';
@@ -80,34 +79,38 @@ const transformRealtimeResponse = (apiResponse: any): WeatherData => {
     return sanitizedWeatherData;
 };
 
-/**
- * Transform Tomorrow.io forecast response to our ForecastData format
- */
-const transformForecastResponse = (apiResponse: any, location: Location): ForecastData => {
-    const timeline = apiResponse.timelines[0];
 
+export const transformForecastResponse = (
+    apiResponse: any,
+    timestepKey: TimestepKey
+  ): ForecastData => {
+    const intervals = apiResponse.timelines[timestepKey];
+    const location = apiResponse.location;
+    const isHourly = timestepKey === 'hourly';
+  
     return {
-        location,
-        timestep: timeline.timestep,
-        intervals: timeline.intervals.map((interval: any) => ({
-            time: new Date(interval.startTime),
-            temperature: interval.values.temperature,
-            humidity: interval.values.humidity,
-            windSpeed: interval.values.windSpeed,
-            windDirection: interval.values.windDirection,
-            precipitation: {
-                intensity: interval.values.precipitationIntensity,
-                probability: interval.values.precipitationProbability
-            },
-            visibility: interval.values.visibility,
-            uvIndex: interval.values.uvIndex,
-            cloudCover: interval.values.cloudCover,
-            pressure: interval.values.pressureSurfaceLevel,
-            weatherCode: interval.values.weatherCode,
-            description: getWeatherDescription(interval.values.weatherCode)
-        }))
+      location,
+      timestep: isHourly ? '1h' : '1d',
+      intervals: intervals.map((interval: any) => ({
+        time: new Date(interval.time),
+        temperature: isHourly ? interval.values.temperature : interval.values.temperatureMax,
+        feelsLike: isHourly ? interval.values.temperatureApparent : interval.values.temperatureApparentMax,
+        humidity: isHourly ? interval.values.humidity : interval.values.humidityAvg,
+        cloudCover: isHourly ? interval.values.cloudCover : interval.values.cloudCoverAvg,
+        precipitationChance: isHourly ? interval.values.precipitationProbability : interval.values.precipitationProbabilityMax ?? 0,
+        windSpeed: isHourly ? interval.values.windSpeed : interval.values.windSpeedAvg,
+        uvIndex: isHourly ? interval.values.uvIndex : interval.values.uvIndexMax,
+        sunrise: isHourly ? undefined : interval.values.sunriseTime,
+        sunset: isHourly ? undefined : interval.values.sunsetTime,
+        weatherCode: isHourly ? interval.values.weatherCode : interval.values``.weatherCodeMax,
+        description: getWeatherDescription(
+          isHourly ? interval.values.weatherCode : interval.values.weatherCodeMax
+        )
+      }))
     };
-};
+  };
+  
+
 
 /**
  * Get real-time weather for a location (flexible: coordinates or city name)
@@ -123,7 +126,7 @@ export const getRealTimeWeatherData = async (
     
     // Use coordinates if available, otherwise use city name
     if (location.lat !== undefined && location.lon !== undefined) {
-        apiResponse = await getRealTimeWeather(location.lat, location.lon, units);
+        apiResponse = await getRealTimeWeatherByCoordinates(location.lat, location.lon, units);
     } else if (location.name) {
         // Tomorrow.io API accepts city names as location parameter
         apiResponse = await getRealTimeWeatherByCity(location.name, units);
@@ -150,7 +153,7 @@ export const getWeatherForecastData = async (
     
     // Use coordinates if available, otherwise use city name
     if (location.lat !== undefined && location.lon !== undefined) {
-        apiResponse = await getWeatherForecast(location.lat, location.lon, timesteps, units);
+        apiResponse = await getWeatherForecastByCoordinates(location.lat, location.lon, timesteps, units);
     } else if (location.name) {
         // Tomorrow.io API accepts city names as location parameter
         apiResponse = await getWeatherForecastByCity(location.name, timesteps, units);
@@ -159,57 +162,11 @@ export const getWeatherForecastData = async (
     }
 
     // Transform API response to our format
-    const forecastData = transformForecastResponse(apiResponse, location);
-
-    // Return only essential forecast data
-    return {
-        location: {
-            name: forecastData.location.name || location.name,
-            lat: forecastData.location.lat || location.lat,
-            lon: forecastData.location.lon || location.lon,
-            country: forecastData.location.country
-        },
-        timestep: forecastData.timestep,
-        intervals: forecastData.intervals.map(interval => ({
-            time: interval.time,
-            temperature: interval.temperature,
-            windSpeed: interval.windSpeed,
-            windDirection: interval.windDirection,
-            precipitation: {
-                intensity: interval.precipitation.intensity,
-                probability: interval.precipitation.probability
-            },
-            condition: interval.description
-        }))
-    };
+    const timestepKey: TimestepKey = timesteps === '1h' ? 'hourly' : 'daily';
+    
+    return transformForecastResponse(apiResponse, timestepKey);
 };
 
-/**
- * Search for locations by name
- */
-export const searchLocations = async (query: string, limit: number = 5): Promise<Location[]> => {
-    if (!query || query.trim().length < 2) {
-        throw HttpError.badRequest('Search query must be at least 2 characters');
-    }
-
-    const searchResponse = await searchLocation(query, limit);
-
-    return searchResponse.features.map(feature => {
-        const [lon, lat] = feature.geometry.coordinates;
-        const props = feature.properties || {};
-
-        return {
-            lat: Number(lat),
-            lon: Number(lon),
-            name: props.name || props.full_name || query,
-            country: props.country
-        };
-    });
-};
-
-/**
- * Transform weather data to essential information only
- */
 const transformToEssentialData = (weatherData: WeatherData) => {
     return {
         location: {
@@ -294,21 +251,6 @@ export const getServiceHealth = async () => {
         },
         timestamp: new Date()
     };
-};
-
-// Export all functions as a service object for backward compatibility
-export const weatherService = {
-    getRealTimeWeather: getRealTimeWeatherData,
-    getWeatherForecast: getWeatherForecastData,
-    searchLocations,
-    getWeatherWithFormat,
-    getBatchWeather,
-    getServiceHealth
-};
-
-// Export alias for backward compatibility
-export {
-    getRealTimeWeatherData as getCurrentWeather
 };
 
 // Re-export the API client functions for direct access

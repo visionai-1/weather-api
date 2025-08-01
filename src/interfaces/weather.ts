@@ -17,6 +17,7 @@ export interface LocationQuery {
     city?: string;
 }
 
+export type TimestepKey = 'hourly' | 'daily';
 // Tomorrow.io API response interfaces
 export interface TomorrowRealtimeResponse {
     data: {
@@ -66,20 +67,6 @@ export interface TomorrowForecastResponse {
         lon: number;
     };
 }
-
-export interface TomorrowLocationSearchResponse {
-    features: Array<{
-        geometry: {
-            coordinates: [number, number]; // [lon, lat]
-        };
-        properties: {
-            name?: string;
-            full_name?: string;
-            country?: string;
-        };
-    }>;
-}
-
 // Our weather data models
 export interface WeatherData {
     location: Location;
@@ -99,28 +86,25 @@ export interface WeatherData {
     weatherCode: number;
     description: string;
 }
-
 export interface ForecastData {
     location: Location;
-    timestep: string;
+    timestep: '1d' | '1h';
     intervals: Array<{
-        time: Date | string;
-        temperature: number;
-        humidity: number;
-        windSpeed: number;
-        windDirection: number;
-        precipitation: {
-            intensity: number;
-            probability: number;
-        };
-        visibility: number;
-        uvIndex: number;
-        cloudCover: number;
-        pressure: number;
-        weatherCode: number;
-        description: string;
+      time: Date | string;
+      temperature: number;              // hourly: temperature, daily: max temp
+      feelsLike: number;               // hourly: apparent, daily: max apparent
+      humidity: number;                // avg humidity
+      cloudCover: number;              // avg cloud cover
+      precipitationChance: number;     // max precipitation probability
+      windSpeed: number;               // avg wind speed
+      uvIndex: number;                 // max uv
+      sunrise?: string;                // only in daily
+      sunset?: string;                 // only in daily
+      weatherCode: number;
+      description: string;
     }>;
-}
+  }
+  
 
 // Compact weather response format
 export interface CompactWeatherData {

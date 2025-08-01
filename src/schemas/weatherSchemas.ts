@@ -25,12 +25,6 @@ export const unitsSchema = Joi.string().valid('metric', 'imperial').default('met
 export const formatSchema = Joi.string().valid('full', 'compact').default('full');
 export const timestepsSchema = Joi.string().valid('1h', '1d').default('1h');
 
-// === Base coordinate object ===
-export const coordinateSchema = Joi.object({
-    lat: latSchema.required(),
-    lon: lonSchema.required()
-});
-
 // === Location schema (city or lat/lon pair) ===
 export const locationSchema = Joi.object({
     lat: latSchema.optional(),
@@ -95,42 +89,5 @@ export const getBatchWeatherBodySchema = Joi.object({
             'array.max': 'Maximum 10 locations allowed per batch request',
             'any.required': 'Locations array is required'
         }),
-    units: unitsSchema
-});
-
-// === Location search (query param) ===
-export const searchLocationsParamsSchema = Joi.object({
-    query: Joi.string().trim().min(2).required().messages({
-        'string.min': 'Search query must be at least 2 characters',
-        'any.required': 'Search query is required'
-    })
-});
-
-export const searchLocationsQuerySchema = Joi.object({
-    limit: Joi.number().integer().min(1).max(10).default(5).messages({
-        'number.min': 'Limit must be at least 1',
-        'number.max': 'Limit cannot exceed 10'
-    })
-});
-
-// === Route params schemas ===
-export const cityParamsSchema = Joi.object({
-    city: citySchema.required().messages({
-        'any.required': 'City name is required'
-    })
-});
-
-export const coordinatesParamsSchema = Joi.object({
-    lat: latSchema.required().messages({
-        'any.required': 'Latitude is required'
-    }),
-    lon: lonSchema.required().messages({
-        'any.required': 'Longitude is required'
-    })
-});
-
-// === Location endpoint query schema ===
-export const locationEndpointQuerySchema = Joi.object({
-    format: formatSchema,
     units: unitsSchema
 });
