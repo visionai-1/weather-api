@@ -20,7 +20,6 @@ const createApiClient = (): AxiosInstance => {
 
     const client = axios.create({
         baseURL: ENV.TOMORROW_API_BASE_URL,
-        timeout: 15000,
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',

@@ -1,10 +1,10 @@
-import { WeatherData, ForecastData, LocationQuery, Location, CompactWeatherData, TimestepKey } from '../../interfaces/weather';
+import { WeatherData, ForecastData, LocationQuery, Location, TimestepKey } from '../../interfaces/weather';
 import { 
     getRealTimeWeatherByCoordinates, 
     getRealTimeWeatherByCity, 
     getWeatherForecastByCity, 
     checkApiHealth, 
-    getWeatherForecastByCoordinates
+    getWeatherForecastByCoordinates,
 } from './weatherApiClient';
 import { validateLocationQuery, validateCoordinates, getWeatherDescription, sanitizeWeatherData } from '../../utils/weather';
 import HttpError from '../../utils/httpError';
@@ -87,6 +87,8 @@ export const transformForecastResponse = (
     const intervals = apiResponse.timelines[timestepKey];
     const location = apiResponse.location;
     const isHourly = timestepKey === 'hourly';
+
+    Object.assign(location, { city: apiResponse.location.name });
   
     return {
       location,
@@ -170,6 +172,7 @@ export const getWeatherForecastData = async (
 const transformToEssentialData = (weatherData: WeatherData) => {
     return {
         location: {
+            city: weatherData.location.name,
             name: weatherData.location.name || `${weatherData.location.lat}, ${weatherData.location.lon}`,
             lat: weatherData.location.lat,
             lon: weatherData.location.lon,
@@ -252,6 +255,3 @@ export const getServiceHealth = async () => {
         timestamp: new Date()
     };
 };
-
-// Re-export the API client functions for direct access
-export * from './weatherApiClient'; 
