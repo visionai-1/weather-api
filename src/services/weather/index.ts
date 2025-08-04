@@ -104,7 +104,7 @@ export const transformForecastResponse = (
         uvIndex: isHourly ? interval.values.uvIndex : interval.values.uvIndexMax,
         sunrise: isHourly ? undefined : interval.values.sunriseTime,
         sunset: isHourly ? undefined : interval.values.sunsetTime,
-        weatherCode: isHourly ? interval.values.weatherCode : interval.values``.weatherCodeMax,
+        weatherCode: isHourly ? interval.values.weatherCode : interval.values.weatherCodeMax,
         description: getWeatherDescription(
           isHourly ? interval.values.weatherCode : interval.values.weatherCodeMax
         )

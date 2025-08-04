@@ -2,6 +2,13 @@ import axios, { AxiosInstance } from 'axios';
 import { TomorrowRealtimeResponse, TomorrowForecastResponse } from '../../interfaces/weather';
 import { ENV } from '../../config/constants';
 import HttpError from '../../utils/httpError';
+import {
+    getMockRealtimeWeatherByCoordinates,
+    getMockRealtimeWeatherByCity,
+    getMockForecastByCoordinates,
+    getMockForecastByCity,
+    getMockApiHealth
+} from '../../mocks/simpleMocks';
 
 /**
  * 🌐 Tomorrow.io API Client
@@ -12,6 +19,11 @@ import HttpError from '../../utils/httpError';
  * Create and configure axios client for Tomorrow.io API
  */
 const createApiClient = (): AxiosInstance => {
+    // Skip API client creation if using mocks
+    if (ENV.USE_MOCK_WEATHER) {
+        return axios.create(); // Return empty client for mock mode
+    }
+    
     const apiKey = ENV.TOMORROW_API_KEY || '';
     
     if (!apiKey) {
@@ -70,6 +82,11 @@ export const getRealTimeWeatherByCoordinates = async (
     lon: number, 
     units: 'metric' | 'imperial' = 'metric'
 ): Promise<TomorrowRealtimeResponse> => {
+    // Return mock data if enabled
+    if (ENV.USE_MOCK_WEATHER) {
+        return getMockRealtimeWeatherByCoordinates(lat, lon);
+    }
+    
     const response = await apiClient.get('/weather/realtime', {
         params: {
             location: `${lat},${lon}`,
@@ -86,6 +103,11 @@ export const getRealTimeWeatherByCity = async (
     city: string,
     units: 'metric' | 'imperial' = 'metric'
 ): Promise<TomorrowRealtimeResponse> => {
+    // Return mock data if enabled
+    if (ENV.USE_MOCK_WEATHER) {
+        return getMockRealtimeWeatherByCity(city);
+    }
+    
     const response = await apiClient.get('/weather/realtime', {
         params: {
             location: city,
@@ -104,6 +126,11 @@ export const getWeatherForecastByCoordinates = async (
     timesteps: '1h' | '1d' = '1h',
     units: 'metric' | 'imperial' = 'metric'
 ): Promise<TomorrowForecastResponse> => {
+    // Return mock data if enabled
+    if (ENV.USE_MOCK_WEATHER) {
+        return getMockForecastByCoordinates(lat, lon, timesteps);
+    }
+    
     const response = await apiClient.get('/weather/forecast', {
         params: {
             location: `${lat},${lon}`,
@@ -122,6 +149,11 @@ export const getWeatherForecastByCity = async (
     timesteps: '1h' | '1d' = '1h',
     units: 'metric' | 'imperial' = 'metric'
 ): Promise<TomorrowForecastResponse> => {
+    // Return mock data if enabled
+    if (ENV.USE_MOCK_WEATHER) {
+        return getMockForecastByCity(city, timesteps);
+    }
+    
     const response = await apiClient.get('/weather/forecast', {
         params: {
             location: city,
@@ -136,6 +168,11 @@ export const getWeatherForecastByCity = async (
  * Check API health status
  */
 export const checkApiHealth = async (): Promise<{ status: 'healthy' | 'unhealthy' }> => {
+    // Return mock health if enabled
+    if (ENV.USE_MOCK_WEATHER) {
+        return getMockApiHealth();
+    }
+    
     try {
         await apiClient.get('/weather/realtime', {
             params: {

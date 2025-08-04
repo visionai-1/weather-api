@@ -22,6 +22,9 @@ export const ENV = {
     // Tomorrow.io API Configuration
     TOMORROW_API_KEY: process.env.TOMORROW_API_KEY,
     TOMORROW_API_BASE_URL: process.env.TOMORROW_API_BASE_URL || 'https://api.tomorrow.io/v4',
+    
+    // Mock Configuration
+    USE_MOCK_WEATHER: process.env.USE_MOCK_WEATHER === 'true' || process.env.NODE_ENV === 'test',
 
     // JWT Configuration
     JWT: {
