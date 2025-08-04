@@ -19,13 +19,11 @@ const setupSecurityMiddleware = (app: Application): void => {
         crossOriginEmbedderPolicy: false, // Disable for API compatibility
     }));
 
-    // CORS configuration
+    // Allow all CORS requests - completely permissive
     const corsOptions = {
-        origin: ENV.NODE_ENV === 'production' 
-            ? ['https://your-frontend-domain.com'] // Add your production domains
-            : true, // Allow all origins in development
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        origin: true, // Allow all origins
+        credentials: true, // Allow credentials
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
         allowedHeaders: [
             'Origin',
             'X-Requested-With',
@@ -33,16 +31,37 @@ const setupSecurityMiddleware = (app: Application): void => {
             'Accept',
             'Authorization',
             'X-Request-Id',
+            'X-API-Key',
+            'X-Client-Version',
+            'Cache-Control',
+            'Pragma'
         ],
         optionsSuccessStatus: 200,
+        preflightContinue: false,
+        maxAge: 86400, // Cache preflight for 24 hours
     };
 
     app.use(cors(corsOptions));
 
-    // Remove server information disclosure
+    // Additional CORS headers for maximum compatibility
     app.use((req, res, next) => {
+        // Remove server information disclosure
         res.removeHeader('X-Powered-By');
         res.setHeader('X-API-Version', '1.0.0');
+        
+        // Set permissive CORS headers
+        res.header('Access-Control-Allow-Origin', '*');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Request-Id, X-API-Key, X-Client-Version, Cache-Control, Pragma');
+        res.header('Access-Control-Max-Age', '86400');
+        
+        // Handle preflight requests
+        if (req.method === 'OPTIONS') {
+            res.status(200).end();
+            return;
+        }
+        
         next();
     });
 

@@ -26,6 +26,25 @@ export const ENV = {
     // Mock Configuration
     USE_MOCK_WEATHER: process.env.USE_MOCK_WEATHER === 'true' || process.env.NODE_ENV === 'test',
 
+    // CORS Configuration - Completely Permissive
+    CORS: {
+        ALLOWED_ORIGINS: ['*'], // Allow all origins
+        ALLOW_CREDENTIALS: true, // Allow credentials
+        ALLOWED_METHODS: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+        ALLOWED_HEADERS: [
+            'Origin',
+            'X-Requested-With', 
+            'Content-Type',
+            'Accept',
+            'Authorization',
+            'X-Request-Id',
+            'X-API-Key',
+            'X-Client-Version',
+            'Cache-Control',
+            'Pragma'
+        ],
+    },
+
     // JWT Configuration
     JWT: {
         SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key-here',
